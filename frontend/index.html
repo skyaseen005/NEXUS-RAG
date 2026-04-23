@@ -800,6 +800,7 @@ input[type="file"] { display: none; }
 <div id="root"></div>
 
 <script type="text/babel">
+  const BASE_URL = "https://nexus-rag-1.onrender.com";
 const { useState, useEffect, useRef, useCallback } = React;
 
 marked.setOptions({ breaks: true, gfm: true });
@@ -895,7 +896,7 @@ function AddPanel({ onAdded, toast }) {
     fd.append('file', file);
     setBusy(true);
     try {
-      const r = await fetch('/api/upload', { method: 'POST', body: fd });
+      const r = await fetch(`${BASE_URL}/api/upload`, { method: 'POST', body: fd });
       const d = await r.json();
       if (!r.ok) throw new Error(d.detail || 'Upload failed');
       toast(`✓ ${d.added} chunks from "${d.source}"`, 'ok');
@@ -908,7 +909,7 @@ function AddPanel({ onAdded, toast }) {
     if (!url.trim()) return;
     setBusy(true);
     try {
-      const r = await fetch('/api/add-url', {
+      const r = await fetch(`${BASE_URL}/api/add-url`, {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ url: url.trim() })
       });
@@ -925,7 +926,7 @@ function AddPanel({ onAdded, toast }) {
     setBusy(true);
     try {
       const n = name.trim() || `paste_${Date.now()}`;
-      const r = await fetch('/api/add-text', {
+      const r = await fetch(`${BASE_URL}/api/add-text`, {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ text: raw, name: n })
       });
@@ -1003,7 +1004,7 @@ function Sidebar({ stats, docs, onRefresh, onClear, onExport, toast }) {
   const del = async (src) => {
     if (!confirm(`Remove "${src}"?`)) return;
     try {
-      const r = await fetch(`/api/documents/${encodeURIComponent(src)}`, { method: 'DELETE' });
+      const r = await fetch(`${BASE_URL}/api/documents/${encodeURIComponent(src)}`, { method: 'DELETE' });
       const d = await r.json();
       toast(`Removed ${d.deleted} chunks`, 'ok');
       onRefresh();
@@ -1122,8 +1123,8 @@ function App() {
 
   const refresh = useCallback(async () => {
     const [s, d] = await Promise.all([
-      fetch('/api/stats').then(r => r.json()),
-      fetch('/api/documents').then(r => r.json()),
+     fetch(`${BASE_URL}/api/stats`).then(r => r.json()),
+      fetch(`${BASE_URL}/api/documents`).then(r => r.json()),
     ]);
     setStats(s);
     setDocs(d.documents || []);
@@ -1150,7 +1151,7 @@ function App() {
     ]);
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch(`${BASE_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: text }),
@@ -1196,7 +1197,7 @@ function App() {
   };
 
   const clear = async () => {
-    await fetch('/api/history', { method: 'DELETE' });
+    await fetch(`${BASE_URL}/api/history`, { method: 'DELETE' });
     setMsgs([]);
     setStats(s => ({ ...s, turn_count: 0 }));
     toast('Conversation cleared', 'info');
@@ -1204,7 +1205,7 @@ function App() {
 
   const exportSession = () => {
     if (!msgs.length) { toast('Nothing to export', 'err'); return; }
-    window.open('/api/export', '_blank');
+    window.open(`${BASE_URL}/api/export`, '_blank');
     toast('Exporting…', 'info');
   };
 
